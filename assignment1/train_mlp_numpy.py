@@ -53,7 +53,11 @@ def accuracy(predictions, targets):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
+    # Accuracy is the number of correct predictions divided by the number of total predictions
 
+
+    predicted = np.argmax(predictions, axis=1)
+    accuracy = np.mean(predicted == targets)
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -81,6 +85,20 @@ def evaluate_model(model, data_loader):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
+
+    # Initialize the accuracy
+    avg_accuracy = 0.0
+
+    # Iterate over the data loader
+    for x, y in data_loader:
+        # Forward pass
+        x = x.reshape(x.shape[0], -1)
+        predictions = model.forward(x)
+        # Compute the accuracy
+        avg_accuracy += accuracy(predictions, y)
+
+    # Compute the average accuracy
+    avg_accuracy /= len(data_loader)
 
     #######################
     # END OF YOUR CODE    #
@@ -135,14 +153,57 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
     #######################
 
     # TODO: Initialize model and loss module
-    model = ...
-    loss_module = ...
+    model = MLP(3072, hidden_dims, 10)
+    loss_module = CrossEntropyModule()
     # TODO: Training loop including validation
-    val_accuracies = ...
-    # TODO: Test best model
-    test_accuracy = ...
-    # TODO: Add any information you might want to save for plotting
-    logging_dict = ...
+    val_accuracies = []
+    best_val_accuracy = 0.0
+    best_model = None
+
+    for epoch in range(epochs):
+        print(f"Epoch {epoch + 1}/{epochs}")
+        train_loss = 0
+        for x, y in cifar10_loader['train']:
+            # Forward pass
+            x = x.reshape(x.shape[0], -1)
+
+            predictions = model.forward(x)
+  
+            loss = loss_module.forward(predictions, y)
+            train_loss += loss
+            grad_loss = loss_module.backward(predictions, y)
+            model.backward(grad_loss)
+
+            # Update weights
+            for module in model.modules:
+                if hasattr(module, 'params') and hasattr(module, 'grads'):
+                    module.params['weight'] -= lr * module.grads['weight']
+                    module.params['bias'] -= lr * module.grads['bias']
+
+            model.clear_cache()
+            
+        
+        print(f"Training loss: {train_loss}")
+        # Evaluate on validation set
+        val_accuracy = evaluate_model(model, cifar10_loader['validation'])
+        val_accuracies.append(val_accuracy)
+        print(f"Validation accuracy: {val_accuracy}")
+        
+        # Save best model
+        if val_accuracy > best_val_accuracy:
+            best_val_accuracy = val_accuracy
+            best_model = deepcopy(model)
+
+    # Test best model
+    test_accuracy = evaluate_model(best_model, cifar10_loader['test'])
+    print(f"Test accuracy: {test_accuracy}")
+
+    # Add any information you might want to save for plotting
+    logging_dict = {
+        'val_accuracies': val_accuracies,
+        'best_val_accuracy': best_val_accuracy,
+        'test_accuracy': test_accuracy
+    }
     #######################
     # END OF YOUR CODE    #
     #######################

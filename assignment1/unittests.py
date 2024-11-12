@@ -16,6 +16,7 @@
 import unittest
 import numpy as np
 
+
 from modules import LinearModule, SoftMaxModule, CrossEntropyModule
 from modules import ELUModule
 

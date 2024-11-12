@@ -64,9 +64,11 @@ class MLP(object):
         if len(n_hidden) > 1:
           for i in range(1, len(n_hidden)):
               self.modules.append(LinearModule(n_hidden[i-1], n_hidden[i]))
+              self.modules.append(ELUModule())
 
         # Initialize the output layer
         self.modules.append(LinearModule(n_hidden[-1], n_classes))
+        self.modules.append(SoftMaxModule())
         
         #######################
         # END OF YOUR CODE    #
@@ -115,6 +117,7 @@ class MLP(object):
         for module in reversed(self.modules):
             dout = module.backward(dout)
         
+        return dout
         #######################
         # END OF YOUR CODE    #
         #######################
