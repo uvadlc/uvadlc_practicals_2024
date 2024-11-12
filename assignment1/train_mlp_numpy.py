@@ -209,15 +209,25 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
     }
     # plot the loss curve and the validation accuracies
     import matplotlib.pyplot as plt
-    plt.plot(val_accuracies)
-    plt.xlabel('Epoch')
-    plt.ylabel('Validation accuracy')
-    plt.title('Validation accuracy vs Epoch')
-    plt.show()
-    plt.plot(loss_scores)
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Loss vs Epoch')
+    # Create a figure with 2 subplots (1 row, 2 columns)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+
+    # Plot validation accuracy on the first subplot (ax1)
+    ax1.plot(val_accuracies)
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Validation Accuracy')
+    ax1.set_title('Validation Accuracy vs Epoch')
+
+    # Plot training loss on the second subplot (ax2)
+    ax2.plot(loss_scores)
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Loss')
+    ax2.set_title('Training Loss vs Epoch')
+
+    # Adjust the layout to prevent overlapping
+    plt.tight_layout()
+
+    # Show the plots
     plt.show()
 
 
