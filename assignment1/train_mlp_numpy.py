@@ -157,6 +157,7 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
     loss_module = CrossEntropyModule()
     # TODO: Training loop including validation
     val_accuracies = []
+    loss_scores = []
     best_val_accuracy = 0.0
     best_model = None
 
@@ -187,6 +188,7 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
         # Evaluate on validation set
         val_accuracy = evaluate_model(model, cifar10_loader['validation'])
         val_accuracies.append(val_accuracy)
+        loss_scores.append(train_loss)
         print(f"Validation accuracy: {val_accuracy}")
         
         # Save best model
@@ -201,9 +203,25 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
     # Add any information you might want to save for plotting
     logging_dict = {
         'val_accuracies': val_accuracies,
+        'loss_scores': loss_scores,
         'best_val_accuracy': best_val_accuracy,
         'test_accuracy': test_accuracy
     }
+    # plot the loss curve and the validation accuracies
+    import matplotlib.pyplot as plt
+    plt.plot(val_accuracies)
+    plt.xlabel('Epoch')
+    plt.ylabel('Validation accuracy')
+    plt.title('Validation accuracy vs Epoch')
+    plt.show()
+    plt.plot(loss_scores)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Loss vs Epoch')
+    plt.show()
+    
+
+
     #######################
     # END OF YOUR CODE    #
     #######################

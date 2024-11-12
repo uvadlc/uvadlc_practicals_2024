@@ -328,7 +328,10 @@ class CrossEntropyModule(object):
         log_probs = -np.log(softmax[np.arange(num_samples), y])
         out = np.sum(log_probs) / num_samples
        
+
         
+
+
         #######################
         # END OF YOUR CODE    #
         #######################
