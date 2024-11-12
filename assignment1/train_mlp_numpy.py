@@ -163,7 +163,7 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
 
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1}/{epochs}")
-        train_loss = 0
+        train_loss = 0.0
         for x, y in cifar10_loader['train']:
             # Forward pass
             x = x.reshape(x.shape[0], -1)
@@ -181,7 +181,7 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
                     module.params['weight'] -= lr * module.grads['weight']
                     module.params['bias'] -= lr * module.grads['bias']
 
-            model.clear_cache()
+        model.clear_cache()
             
         
         print(f"Training loss: {train_loss}")
@@ -219,7 +219,7 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
     plt.ylabel('Loss')
     plt.title('Loss vs Epoch')
     plt.show()
-    
+
 
 
     #######################

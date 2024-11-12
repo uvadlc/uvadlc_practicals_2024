@@ -57,18 +57,25 @@ class MLP(object):
         self.n_classes = n_classes
         self.n_inputs = n_inputs
 
-        # Initialize the first layer
-        self.modules.append(LinearModule(n_inputs, n_hidden[0], input_layer=True))
+        if len(n_hidden) > 0:
+            # Initialize the first hidden layer
+            self.modules.append(LinearModule(n_inputs, n_hidden[0], input_layer=True))
+            self.modules.append(ELUModule())
+            
+            # Initialize the hidden layers
+            for i in range(1, len(n_hidden)):
+                self.modules.append(LinearModule(n_hidden[i-1], n_hidden[i]))
+                self.modules.append(ELUModule())  # Add ELU activation
 
-        # Initialize the hidden layers
-        if len(n_hidden) > 1:
-          for i in range(1, len(n_hidden)):
-              self.modules.append(LinearModule(n_hidden[i-1], n_hidden[i]))
-              self.modules.append(ELUModule())
+            # Initialize the output layer
+            self.modules.append(LinearModule(n_hidden[-1], n_classes))
+        else:
+            # If no hidden layers, create a linear model directly
+            self.modules.append(LinearModule(n_inputs, n_classes, input_layer=True))
 
-        # Initialize the output layer
-        self.modules.append(LinearModule(n_hidden[-1], n_classes))
+        # Add softmax module at the end
         self.modules.append(SoftMaxModule())
+
         
         #######################
         # END OF YOUR CODE    #
