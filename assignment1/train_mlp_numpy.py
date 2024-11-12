@@ -181,7 +181,7 @@ def train(hidden_dims, lr, batch_size, epochs, seed, data_dir):
                     module.params['weight'] -= lr * module.grads['weight']
                     module.params['bias'] -= lr * module.grads['bias']
 
-        model.clear_cache()
+            model.clear_cache()
             
         
         print(f"Training loss: {train_loss}")
