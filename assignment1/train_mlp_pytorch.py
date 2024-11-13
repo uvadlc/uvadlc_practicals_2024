@@ -56,6 +56,10 @@ def accuracy(predictions, targets):
     # PUT YOUR CODE HERE  #
     #######################
 
+    # calculate accuracy
+    predicted = np.argmax(predictions, axis=1)
+    accuracy = np.mean(predicted == targets)
+
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -83,6 +87,20 @@ def evaluate_model(model, data_loader):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
+    # Initialize the accuracy
+    avg_accuracy = 0.0
+
+    # Iterate over the data loader
+    for x, y in data_loader:
+        # Forward pass
+        x = x.reshape(x.shape[0], -1)
+        predictions = model.forward(x)
+        
+        # Compute the accuracy
+        avg_accuracy += accuracy(predictions.cpu().detach().numpy(), y.cpu().detach().numpy())
+
+    # Compute the average accuracy
+    avg_accuracy /= len(data_loader)
 
     #######################
     # END OF YOUR CODE    #
@@ -146,15 +164,85 @@ def train(hidden_dims, lr, use_batch_norm, batch_size, epochs, seed, data_dir):
     #######################
 
     # TODO: Initialize model and loss module
-    model = ...
-    loss_module = ...
-    # TODO: Training loop including validation
-    # TODO: Do optimization with the simple SGD optimizer
-    val_accuracies = ...
-    # TODO: Test best model
-    test_accuracy = ...
-    # TODO: Add any information you might want to save for plotting
-    logging_dict = ...
+    model = MLP(3072, hidden_dims, 10, use_batch_norm).to(device)
+    loss_module = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=lr)
+
+    # Initialize the best model
+    best_model = None
+    best_val_accuracy = 0.0
+
+    # Initialize the logging dictionary
+    logging_dict = {}
+
+    # Training loop
+    val_accuracies = []
+    training_losses = []
+    for epoch in range(epochs):
+        print(f"Epoch {epoch+1}/{epochs}")
+
+        # Initialize the accuracy
+        avg_accuracy = 0.0
+        epoch_loss = 0.0
+
+        # Set the model to training mode
+        model.train()
+
+        # Iterate over the data loader
+        for x, y in cifar10_loader['train']:
+            # Forward pass
+            x = x.to(device).reshape(x.shape[0], -1)
+            y = y.to(device)
+            predictions = model.forward(x)
+            loss = loss_module(predictions, y)
+            epoch_loss += loss.item()
+
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            # Compute the accuracy
+            avg_accuracy += accuracy(predictions.cpu().detach().numpy(), y.cpu().detach().numpy())
+
+        training_losses.append(epoch_loss)
+        # Compute the average accuracy
+        avg_accuracy /= len(cifar10_loader['train'])
+        logging_dict[f"train_accuracy_{epoch}"] = avg_accuracy
+        print(f"Training loss: {epoch_loss}")
+
+        # Evaluate on validation set
+        val_accuracy = evaluate_model(model, cifar10_loader['validation'])
+        val_accuracies.append(val_accuracy)
+        logging_dict[f"val_accuracy_{epoch}"] = val_accuracy
+        print(f"Validation accuracy: {val_accuracy}")
+
+        # Save best model
+        if val_accuracy > best_val_accuracy:            
+            best_val_accuracy = val_accuracy
+            best_model = deepcopy(model)
+
+    logging_dict['val_accuracies'] = val_accuracies
+    logging_dict['training_losses'] = training_losses
+
+    # Test best model
+    test_accuracy = evaluate_model(best_model, cifar10_loader['test'])
+    logging_dict['test_accuracy'] = test_accuracy
+    print(f"Test accuracy: {test_accuracy}")
+
+    # Subplots of validation accuracies and training losses
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(2, 1, figsize=(10, 10))
+    ax[0].plot(val_accuracies)
+    ax[0].set_title("Validation accuracies")
+    ax[0].set_xlabel("Epoch")
+    ax[0].set_ylabel("Accuracy")
+    ax[1].plot(training_losses)
+    ax[1].set_title("Training losses")
+    ax[1].set_xlabel("Epoch")
+    ax[1].set_ylabel("Loss")
+    plt.show()
+
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -169,7 +257,7 @@ if __name__ == '__main__':
     # Model hyperparameters
     parser.add_argument('--hidden_dims', default=[128], type=int, nargs='+',
                         help='Hidden dimensionalities to use inside the network. To specify multiple, use " " to separate them. Example: "256 128"')
-    parser.add_argument('--use_batch_norm', action='store_true',
+    parser.add_argument('--use_batch_norm', default=False, type=bool,
                         help='Use this option to add Batch Normalization layers to the MLP.')
 
     # Optimizer hyperparameters

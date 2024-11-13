@@ -59,7 +59,31 @@ class MLP(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        pass
+        # Initialize the network
+        super(MLP, self).__init__()
+        self.n_inputs = n_inputs
+        self.n_hidden = n_hidden
+        self.n_classes = n_classes
+        self.use_batch_norm = use_batch_norm
+        print(f"Batch norm: {use_batch_norm}")
+
+        self.layers = []
+        self.layers.append(('input', nn.Linear(n_inputs, n_hidden[0])))
+        if use_batch_norm:
+            self.layers.append(('batch_norm', nn.BatchNorm1d(n_hidden[0])))
+        self.layers.append(('elu', nn.ELU()))
+        for i in range(1, len(n_hidden)):
+            self.layers.append(('hidden', nn.Linear(n_hidden[i-1], n_hidden[i])))
+            if use_batch_norm:
+                self.layers.append(('batch_norm', nn.BatchNorm1d(n_hidden[i])))
+            self.layers.append(('elu', nn.ELU()))
+        
+        # Add the output layer
+        self.layers.append(('output', nn.Linear(n_hidden[-1], n_classes)))
+
+        # CrossEntropyLoss is used for loss calculation
+        self.model = nn.Sequential(OrderedDict(self.layers))
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -81,7 +105,10 @@ class MLP(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
+        for layer in self.model:
+            x = layer(x)
 
+        out = x
         #######################
         # END OF YOUR CODE    #
         #######################
