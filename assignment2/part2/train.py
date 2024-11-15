@@ -83,7 +83,8 @@ class GPTLightningModule(pl.LightningModule):
         return acc
         
 
-    def generate(self, prompt: str = '', num_samples: int = 5, n_steps: int = 30, do_sample: bool = True, top_k: int = 10, verbose: bool = False):
+    @torch.inference_mode()
+    def generate(self, prompt: str = '', num_samples: int = 5, n_steps: int = 30, do_sample: bool = True, top_k: int = None, top_p: float=0.6, verbose: bool = False):
         """ Generates text based on a given prompt using either a pre-trained model or a custom-trained model. This function 
         generates text by conditioning on an input prompt. It supports both pre-trained and custom-trained models. For pre-trained models,
         it delegates to a `generate_pretrained` function. For custom-trained models, it starts from a default context or the provided prompt 
@@ -95,7 +96,8 @@ class GPTLightningModule(pl.LightningModule):
             - num_samples (int, optional): The number of text samples to generate. Only used with pre-trained models. Defaults to 5.
             - n_steps (int, optional): The number of tokens to generate. Defaults to 30.
             - do_sample (bool, optional): Whether to use sampling for text generation. Defaults to True.
-            - top_k (int, optional): The number of highest probability vocabulary tokens to keep for top-k-filtering. Defaults to 10.
+            - top_k (int, optional): The number of highest probability vocabulary tokens to keep for top-k-filtering. Defaults to None.
+            - top_p (float, optional): The cumulative probability threshold for nucleus sampling. Defaults to 0.6.
             - verbose (bool, optional): If True, enables verbose output. Currently not used in the function body. Defaults to False.
 
         Returns:
@@ -115,8 +117,8 @@ class GPTLightningModule(pl.LightningModule):
         else:
             context = 'Yesterday I went ' if prompt == '' else prompt
             x = torch.tensor(self.train_dataset.tokenizer.encode(context), dtype=torch.long)[None,...].to(self.config.device)
-            y = self.model.generate(x, n_steps, temperature=1.0, do_sample=do_sample, top_k=top_k)[0]
-            decoded_outputs = self.train_dataset.tokenizer.decode(y)
+            y = self.model.generate(x, n_steps, temperature=1.0, do_sample=do_sample, top_k=top_k, top_p=top_p)[0]
+            decoded_outputs = self.train_dataset.tokenizer.decode(y.tolist())
         return decoded_outputs
 
 
@@ -148,9 +150,15 @@ def train(args):
     print(args)
     pl.seed_everything(args.seed)  
     
+    if args.pretrained_tokenizer:
+        import tiktoken
+        tokenizer = tiktoken.get_encoding("gpt2")
+        args.vocab_size = tokenizer.max_token_value
+    else:
+        tokenizer = CharTokenizer(args.txt_file)
+        args.vocab_size = tokenizer.vocab_size  # Set vocab size from tokenizer
     # Create the dataset with the tokenizer
-    dataset = TextDataset(args, args.txt_file, args.block_size, CharTokenizer)
-    args.vocab_size = dataset.tokenizer.vocab_size  # Set vocab size from tokenizer
+    dataset = TextDataset(args, args.txt_file, args.block_size, tokenizer)
 
     # Initialise the gpt-model
     if args.use_pretrained:

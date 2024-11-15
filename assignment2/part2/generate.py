@@ -21,6 +21,7 @@ class GPTLightningModule(pl.LightningModule):
         # Forward pass through the model
         return self.model(x)
 
+@torch.inference_mode()
 def generate(
     model: torch.nn.Module,
     model_type: str,
@@ -28,7 +29,8 @@ def generate(
     num_samples: int = 10,
     n_steps: int = 20,
     do_sample: bool = True,
-    top_k: int = 50,
+    top_k: int = None,
+    top_p: float = 0.6,
     temperature: float = 1.0,
     device: str = "cpu",
     verbose: bool = True,
@@ -44,7 +46,8 @@ def generate(
         num_samples (int, optional): The number of text samples to generate. Defaults to 10.
         n_steps (int, optional): The number of tokens to generate for each sample. Defaults to 20.
         do_sample (bool, optional): Whether to use sampling; set to False for deterministic generation. Defaults to True.
-        top_k (int, optional): The number of highest probability vocabulary tokens to keep for top-k-filtering. Defaults to 50.
+        top_k (int, optional): The number of highest probability vocabulary tokens to keep for top-k-filtering. Defaults to None.
+        top_p (float, optional): The cumulative probability threshold for nucleus sampling. Defaults to 0.6.
         temperature (float, optional): The value used to module the next token probabilities. Defaults to 1.0.
         device (str, optional): The device (e.g., 'cpu' or 'cuda') on which to perform the computation. Defaults to 'cpu'.
         verbose (bool, optional): If True, prints each generated sample. Defaults to True.
@@ -62,7 +65,7 @@ def generate(
     x = x.expand(num_samples, -1)
 
     # forward the model `steps` times to get samples, in a batch
-    y = model.model.generate(x, max_new_tokens=n_steps, do_sample=do_sample, top_k=top_k, temperature=temperature)
+    y = model.model.generate(x, max_new_tokens=n_steps, do_sample=do_sample, top_k=top_k, top_p=top_p, temperature=temperature)
     
     # Decode the predicted outputs 
     decoded_outputs = []

@@ -452,8 +452,6 @@ class GPT(nn.Module):
                 idx_next = ...
             
             else:
-                # pluck the logits at the final step and scale by desired temperature
-
                 # apply softmax to convert logits to (normalized) probabilities
 
                 # optionally only consider top-k logits for sampling. 
