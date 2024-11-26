@@ -1,0 +1,7 @@
+#This is a gitignore file
+
+.assignment2/part1/assets
+.assignment2/part1/data
+
+.assignment2/part2/assets
+.assignment2/part2/data
