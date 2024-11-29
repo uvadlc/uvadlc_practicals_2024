@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_mig
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=9
+#SBATCH --gpus=1
+#SBATCH --job-name=TrainVAE
+#SBATCH --ntasks=1
+#SBATCH --time=02:00:00
+#SBATCH --mem=32000M
+#SBATCH --output=slurm_output_%A.out
+
+module purge
+module load 2022
+module load Anaconda3/2022.05
+
+# Activate your environment
+source activate dl2023
+# Run your code
+srun python -u train_pl.py --data_dir $TMPDIR/ --progress_bar

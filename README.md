@@ -15,3 +15,7 @@ In order to use it on Snellius, follow the instructions from our [Snellius guide
 This assignment's implementing exercise is consist of two parts; you can find all the necessary instructions in **assignment_2.pdf** on Canvas and in the README.md file in the directories. 
 
 There is a test file in part 2 that you can use to check your implementation. 
+
+## Assignment 3
+
+This assignment's implementing exercise is consist of two parts; you can find all the necessary instructions in **assignment_3.pdf** on Canvas and in the README.md file in the directories.
